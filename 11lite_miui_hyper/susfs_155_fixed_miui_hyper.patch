@@ -1,0 +1,38 @@
+diff -ruaN a/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile b/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile
+--- a/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile	2026-04-04 15:52:12.429069016 +0800
++++ b/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile	2026-04-04 16:01:52.233068795 +0800
+@@ -3,5 +3,5 @@
+ #
+ 
+ 
+-obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTool.o ftsFlash.o ftsGesture.o
++obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTime.o ftsTool.o ftsFlash.o ftsGesture.o
+ 
+diff -ruaN a/drivers/input/touchscreen/fts_spi/fts_lib/Makefile b/drivers/input/touchscreen/fts_spi/fts_lib/Makefile
+--- a/drivers/input/touchscreen/fts_spi/fts_lib/Makefile	2026-04-04 15:52:12.469069016 +0800
++++ b/drivers/input/touchscreen/fts_spi/fts_lib/Makefile	2026-04-04 16:01:52.245068795 +0800
+@@ -3,5 +3,5 @@
+ #
+ 
+ 
+-obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTool.o ftsFlash.o ftsGesture.o
++obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTime.o ftsTool.o ftsFlash.o ftsGesture.o
+ 
+diff -ruaN a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+--- a/fs/proc/task_mmu.c	2026-04-04 15:52:12.509069016 +0800
++++ b/fs/proc/task_mmu.c	2026-04-04 16:01:52.265068795 +0800
+@@ -1774,6 +1774,15 @@
+ 		if (ret)
+ 			goto out_free;
+ 		ret = walk_page_range(mm, start_vaddr, end, &pagemap_ops, &pm);
++#ifdef CONFIG_KSU_SUSFS_SUS_MAP
++		vma = find_vma(mm, start_vaddr);
++		if (vma && vma->vm_file) {
++			struct inode *inode = file_inode(vma->vm_file);
++			if (SUSFS_IS_INODE_SUS_MAP(inode)) {
++				pm.buffer->pme = 0;
++			}
++		}
++#endif
+ 		mmap_read_unlock(mm);
+ 		start_vaddr = end;
