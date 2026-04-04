@@ -1,0 +1,122 @@
+diff -ruaN a/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile b/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile
+--- a/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile	2026-04-04 19:33:35.811888392 +0800
++++ b/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile	2026-04-04 19:59:07.784100932 +0800
+@@ -3,5 +3,5 @@
+ #
+ 
+ 
+-obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTool.o ftsFlash.o ftsGesture.o
++obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTime.o ftsTool.o ftsFlash.o ftsGesture.o
+ 
+diff -ruaN a/drivers/input/touchscreen/fts_spi/fts_lib/Makefile b/drivers/input/touchscreen/fts_spi/fts_lib/Makefile
+--- a/drivers/input/touchscreen/fts_spi/fts_lib/Makefile	2026-04-04 19:33:35.843888392 +0800
++++ b/drivers/input/touchscreen/fts_spi/fts_lib/Makefile	2026-04-04 19:59:07.788100932 +0800
+@@ -3,5 +3,5 @@
+ #
+ 
+ 
+-obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTool.o ftsFlash.o ftsGesture.o
++obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTime.o ftsTool.o ftsFlash.o ftsGesture.o
+ 
+diff -ruaN a/fs/proc/fd.c b/fs/proc/fd.c
+--- a/fs/proc/fd.c	2026-04-04 19:33:35.875888392 +0800
++++ b/fs/proc/fd.c	2026-04-04 19:59:07.812100932 +0800
+@@ -70,12 +70,69 @@
+ 
+ 	if (ret)
+ 		return ret;
++#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
++	mnt = real_mount(file->f_path.mnt);
++	if (mnt->mnt_id >= DEFAULT_KSU_MNT_ID &&
++		likely(susfs_is_current_proc_umounted()))
++	{
++		struct path path;
++		char *pathname = kmalloc(PAGE_SIZE, GFP_KERNEL);
++		char *dpath;
+ 
++		if (!pathname) {
++			goto orig_flow;
++		}
++		dpath = d_path(&file->f_path, pathname, PAGE_SIZE);
++		if (!dpath) {
++			goto out_kfree;
++		}
++		if (kern_path(dpath, 0, &path)) {
++			goto out_kfree;
++		}
++		if (!path.dentry->d_inode) {
++			goto out_path_put;
++		}
++ 
++		seq_printf(m, "pos:\t%lli\nflags:\t0%o\nmnt_id:\t%i\nino:\t%lu\n",
++				(long long)file->f_pos, f_flags,
++				susfs_get_non_sus_mnt_id_from_mnt(mnt),
++				path.dentry->d_inode->i_ino);
++		path_put(&path);
++		kfree(pathname);
++		goto bypass_orig_flow;
++out_path_put:
++		path_put(&path);
++out_kfree:
++		kfree(pathname);
++		goto orig_flow;
++	}
++#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
+ 
++#ifdef CONFIG_KSU_SUSFS_OPEN_REDIRECT
++	if (SUSFS_IS_INODE_OPEN_REDIRECT(file_inode(file))) {
++		if (susfs_open_redirect_spoof_seq_show(file_inode(file), &mnt_id, &ino))
++			goto orig_flow;
++		seq_printf(m, "pos:\t%lli\nflags:\t0%o\nmnt_id:\t%i\nino:\t%lu\n",
++				(long long)file->f_pos, f_flags,
++				mnt_id,
++				ino);
++		goto bypass_orig_flow;
++	}
++#endif // #ifdef CONFIG_KSU_SUSFS_OPEN_REDIRECT
++
++#if defined(CONFIG_KSU_SUSFS_SUS_MOUNT) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)
++orig_flow:
++	seq_printf(m, "pos:\t%lli\nflags:\t0%o\nmnt_id:\t%i\nino:\t%lu\n",
++			(long long)file->f_pos, f_flags,
++			real_mount(file->f_path.mnt)->mnt_id,
++			file_inode(file)->i_ino);
++bypass_orig_flow:
++#else
+ 	seq_printf(m, "pos:\t%lli\nflags:\t0%o\nmnt_id:\t%i\n",
+ 		   (long long)file->f_pos, f_flags,
+ 		   real_mount(file->f_path.mnt)->mnt_id);
+ 
++#endif // #if defined(CONFIG_KSU_SUSFS_SUS_MOUNT) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)
+ 	show_fd_locks(m, file, files);
+ 	if (seq_has_overflowed(m))
+ 		goto out;
+diff -ruaN a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+--- a/fs/proc/task_mmu.c	2026-04-04 19:33:35.887888392 +0800
++++ b/fs/proc/task_mmu.c	2026-04-04 19:59:07.812100932 +0800
+@@ -23,6 +23,10 @@
+ 
+ #include <linux/mm_inline.h>
+ #include <linux/ctype.h>
++#if defined(CONFIG_KSU_SUSFS_SUS_KSTAT) || defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)
++#include <linux/susfs_def.h>
++#endif // #if defined(CONFIG_KSU_SUSFS_SUS_KSTAT) || defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)
++
+ #include <asm/elf.h>
+ #include <asm/tlb.h>
+ #include <asm/tlbflush.h>
+@@ -1771,6 +1775,15 @@
+ 		if (ret)
+ 			goto out_free;
+ 		ret = walk_page_range(mm, start_vaddr, end, &pagemap_ops, &pm);
++#ifdef CONFIG_KSU_SUSFS_SUS_MAP
++		vma = find_vma(mm, start_vaddr);
++		if (vma && vma->vm_file) {
++			struct inode *inode = file_inode(vma->vm_file);
++			if (SUSFS_IS_INODE_SUS_MAP(inode)) {
++				pm.buffer->pme = 0;
++			}
++		}
++#endif
+ 		mmap_read_unlock(mm);
+ 		start_vaddr = end;
