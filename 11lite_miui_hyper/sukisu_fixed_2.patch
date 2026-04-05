@@ -1,16 +1,37 @@
 diff -ruaN a/drivers/kernelsu/policy/app_profile.c b/drivers/kernelsu/policy/app_profile.c
 --- a/drivers/kernelsu/policy/app_profile.c	2026-04-05 16:42:33.503014256 +0800
-+++ b/drivers/kernelsu/policy/app_profile.c	2026-04-05 16:44:24.379014214 +0800
++++ b/drivers/kernelsu/policy/app_profile.c	2026-04-05 17:51:31.911012677 +0800
 @@ -47,10 +47,10 @@
      put_group_info(group_info);
  }
  
 -#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_OPTIONAL_SECCOMP_FILTER_RELEASE))
+-void seccomp_filter_release(struct task_struct *tsk);
 +//#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_OPTIONAL_SECCOMP_FILTER_RELEASE))
- void seccomp_filter_release(struct task_struct *tsk);
++extern void put_seccomp_filter(struct task_struct *tsk);
  #define KSU_HAS_SECCOMP_FILTER_RELEASE
 -#endif
 +//#endif
  
  static void disable_seccomp(void)
+ {
+@@ -99,7 +99,7 @@
+     // https://github.com/torvalds/linux/commit/0d8315dddd2899f519fe1ca3d4d5cdaf44ea421e#diff-45eb79a57536d8eccfc1436932f093eb5c0b60d9361c39edb46581ad313e8987R556-R558
+     fake->sighand = NULL;
+ #endif
+-    seccomp_filter_release(fake);
++    put_seccomp_filter(fake);
+     kfree(fake);
+ #endif
+ }
+diff -ruaN a/kernel/seccomp.c b/kernel/seccomp.c
+--- a/kernel/seccomp.c	2026-04-05 17:46:37.307012790 +0800
++++ b/kernel/seccomp.c	2026-04-05 17:49:42.091012719 +0800
+@@ -596,6 +596,7 @@
+ {
+ 	__put_seccomp_filter(tsk->seccomp.filter);
+ }
++EXPORT_SYMBOL_GPL(put_seccomp_filter);
+ 
+ static void seccomp_init_siginfo(kernel_siginfo_t *info, int syscall, int reason)
  {
