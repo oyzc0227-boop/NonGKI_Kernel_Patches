@@ -1,6 +1,6 @@
 diff -ruaN a/drivers/kernelsu/policy/app_profile.c b/drivers/kernelsu/policy/app_profile.c
 --- a/drivers/kernelsu/policy/app_profile.c	2026-04-05 16:42:33.503014256 +0800
-+++ b/drivers/kernelsu/policy/app_profile.c	2026-04-05 17:51:31.911012677 +0800
++++ b/drivers/kernelsu/policy/app_profile.c	2026-04-05 18:29:13.665164306 +0800
 @@ -47,10 +47,10 @@
      put_group_info(group_info);
  }
@@ -24,6 +24,15 @@ diff -ruaN a/drivers/kernelsu/policy/app_profile.c b/drivers/kernelsu/policy/app
      kfree(fake);
  #endif
  }
+@@ -271,7 +271,7 @@
+     fake->sighand = NULL;
+ #endif
+ 
+-    seccomp_filter_release(fake);
++    put_seccomp_filter(fake);
+     kfree(fake);
+ }
+ 
 diff -ruaN a/kernel/seccomp.c b/kernel/seccomp.c
 --- a/kernel/seccomp.c	2026-04-05 17:46:37.307012790 +0800
 +++ b/kernel/seccomp.c	2026-04-05 17:49:42.091012719 +0800
