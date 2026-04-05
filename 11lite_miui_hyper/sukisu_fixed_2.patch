@@ -1,0 +1,16 @@
+diff -ruaN a/drivers/kernelsu/policy/app_profile.c b/drivers/kernelsu/policy/app_profile.c
+--- a/drivers/kernelsu/policy/app_profile.c	2026-04-05 16:42:33.503014256 +0800
++++ b/drivers/kernelsu/policy/app_profile.c	2026-04-05 16:44:24.379014214 +0800
+@@ -47,10 +47,10 @@
+     put_group_info(group_info);
+ }
+ 
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_OPTIONAL_SECCOMP_FILTER_RELEASE))
++//#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_OPTIONAL_SECCOMP_FILTER_RELEASE))
+ void seccomp_filter_release(struct task_struct *tsk);
+ #define KSU_HAS_SECCOMP_FILTER_RELEASE
+-#endif
++//#endif
+ 
+ static void disable_seccomp(void)
+ {
