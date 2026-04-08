@@ -339,6 +339,40 @@ diff -ruaN a/kernel/seccomp.c b/kernel/seccomp.c
  
  static void seccomp_init_siginfo(siginfo_t *info, int syscall, int reason)
  {
+diff -ruaN a/lib/string.c b/lib/string.c
+--- a/lib/string.c	2026-04-09 01:31:34.100377049 +0800
++++ b/lib/string.c	2026-04-09 01:34:05.660376991 +0800
+@@ -236,6 +236,30 @@
+ EXPORT_SYMBOL(strscpy);
+ #endif
+ 
++/**
++ * stpcpy - copy a string from src to dest returning a pointer to the new end
++ *          of dest, including src's %NUL-terminator. May overrun dest.
++ * @dest: pointer to end of string being copied into. Must be large enough
++ *        to receive copy.
++ * @src: pointer to the beginning of string being copied from. Must not overlap
++ *       dest.
++ *
++ * stpcpy differs from strcpy in a key way: the return value is the new
++ * %NUL-terminated character. (for strcpy, the return value is a pointer to
++ * src. This interface is considered unsafe as it doesn't perform bounds
++ * checking of the inputs. As such it's not recommended for usage. Instead,
++ * its definition is provided in case the compiler lowers other libcalls to
++ * stpcpy.
++ */
++char *stpcpy(char *__restrict__ dest, const char *__restrict__ src);
++char *stpcpy(char *__restrict__ dest, const char *__restrict__ src)
++{
++	while ((*dest++ = *src++) != '\0')
++		/* nothing */;
++	return --dest;
++}
++EXPORT_SYMBOL(stpcpy);
++
+ #ifndef __HAVE_ARCH_STRCAT
+ /**
+  * strcat - Append one %NUL-terminated string to another
 diff -ruaN a/mm/maccess.c b/mm/maccess.c
 --- a/mm/maccess.c	2026-04-07 23:31:19.889585945 +0800
 +++ b/mm/maccess.c	2026-04-07 23:31:19.889585945 +0800
