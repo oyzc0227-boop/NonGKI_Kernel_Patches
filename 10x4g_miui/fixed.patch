@@ -284,6 +284,17 @@ diff -ruaN a/fs/readdir.c b/fs/readdir.c
  
  	if (buf->result)
  		return -EINVAL;
+diff -ruaN a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+--- a/include/asm-generic/vmlinux.lds.h	2026-04-10 01:04:43.003042845 +0800
++++ b/include/asm-generic/vmlinux.lds.h	2026-04-10 01:09:25.735042738 +0800
+@@ -331,6 +331,7 @@
+ 	}								\
+ 									\
+ 	/* Built-in firmware blobs */					\
++	. = ALIGN(8);							\
+ 	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
+ 		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
+ 		KEEP(*(.builtin_fw))					\
 diff -ruaN a/include/linux/uaccess.h b/include/linux/uaccess.h
 --- a/include/linux/uaccess.h	2026-04-07 23:31:19.889585945 +0800
 +++ b/include/linux/uaccess.h	2026-04-07 23:31:19.889585945 +0800
