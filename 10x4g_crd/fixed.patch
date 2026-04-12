@@ -1,0 +1,379 @@
+diff -ruaN a/KernelSU/kernel/Makefile b/KernelSU/kernel/Makefile
+--- a/KernelSU/kernel/Makefile	2026-04-12 21:47:08.259197405 +0800
++++ b/KernelSU/kernel/Makefile	2026-04-12 21:49:26.887197352 +0800
+@@ -144,4 +144,7 @@
+ ccflags-y += -Wno-strict-prototypes -Wno-int-conversion -Wno-gcc-compat -Wno-missing-prototypes
+ ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
+ 
++ccflags-y += -I$(srctree)/security/selinux -I$(srctree)/security/selinux/include
++ccflags-y += -I$(objtree)/security/selinux -include $(srctree)/include/uapi/asm-generic/errno.h
++
+ # Keep a new line here!! Because someone may append config
+diff -ruaN a/KernelSU/kernel/kpm/kpm.c b/KernelSU/kernel/kpm/kpm.c
+--- a/KernelSU/kernel/kpm/kpm.c	2026-04-12 21:47:21.111197400 +0800
++++ b/KernelSU/kernel/kpm/kpm.c	2026-04-12 21:57:46.223197162 +0800
+@@ -35,6 +35,7 @@
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) && defined(CONFIG_MODULES)
+ #include <linux/moduleloader.h>
+ #endif
++#include "../kernel_compat.h"
+ 
+ #define KPM_NAME_LEN 32
+ #define KPM_ARGS_LEN 1024
+@@ -132,19 +133,18 @@
+             goto exit;
+         }
+ 
+-        if (!access_ok(arg1, 255)) {
++        if (!ksu_access_ok(arg1, sizeof(kernel_load_path))) {
+             goto invalid_arg;
+         }
+ 
+-        strncpy_from_user((char *)&kernel_load_path, (const char *)arg1, 255);
++        strncpy_from_user((char *)&kernel_load_path, (const char *)arg1, sizeof(kernel_load_path));
+ 
+         if (arg2 != 0) {
+-            if (!access_ok(arg2, 255)) {
++            if (!ksu_access_ok(arg2, sizeof(kernel_args_buffer))) {
+                 goto invalid_arg;
+             }
+ 
+-            strncpy_from_user((char *)&kernel_args_buffer, (const char *)arg2,
+-                              255);
++            strncpy_from_user((char *)&kernel_args_buffer, (const char *)arg2, sizeof(kernel_args_buffer));
+         }
+ 
+         sukisu_kpm_load_module_path((const char *)&kernel_load_path,
+@@ -158,7 +158,7 @@
+             goto exit;
+         }
+ 
+-        if (!access_ok(arg1, sizeof(kernel_name_buffer))) {
++        if (!ksu_access_ok(arg1, sizeof(kernel_name_buffer))) {
+             goto invalid_arg;
+         }
+ 
+@@ -178,7 +178,7 @@
+             goto exit;
+         }
+ 
+-        if (!access_ok(arg1, sizeof(kernel_name_buffer))) {
++        if (!ksu_access_ok(arg1, sizeof(kernel_name_buffer))) {
+             goto invalid_arg;
+         }
+ 
+@@ -189,7 +189,7 @@
+         sukisu_kpm_info((const char *)&kernel_name_buffer, (char *)&buf,
+                         sizeof(buf), &size);
+ 
+-        if (!access_ok(arg2, size)) {
++        if (!ksu_access_ok(arg2, size)) {
+             goto invalid_arg;
+         }
+ 
+@@ -204,7 +204,7 @@
+             goto exit;
+         }
+ 
+-        if (!access_ok(arg2, len)) {
++        if (!ksu_access_ok(arg2, len)) {
+             goto invalid_arg;
+         }
+ 
+@@ -222,11 +222,11 @@
+         char kpm_name[KPM_NAME_LEN] = { 0 };
+         char kpm_args[KPM_ARGS_LEN] = { 0 };
+ 
+-        if (!access_ok(arg1, sizeof(kpm_name))) {
++        if (!ksu_access_ok(arg1, sizeof(kpm_name))) {
+             goto invalid_arg;
+         }
+ 
+-        if (!access_ok(arg2, sizeof(kpm_args))) {
++        if (!ksu_access_ok(arg2, sizeof(kpm_args))) {
+             goto invalid_arg;
+         }
+ 
+@@ -286,13 +286,13 @@
+         return -EFAULT;
+     }
+ 
+-    if (!access_ok(cmd.control_code, sizeof(int))) {
++    if (!ksu_access_ok(cmd.control_code, sizeof(int))) {
+         pr_err("kpm: invalid control_code pointer %px\n",
+                (void *)cmd.control_code);
+         return -EFAULT;
+     }
+ 
+-    if (!access_ok(cmd.result_code, sizeof(int))) {
++    if (!ksu_access_ok(cmd.result_code, sizeof(int))) {
+         pr_err("kpm: invalid result_code pointer %px\n",
+                (void *)cmd.result_code);
+         return -EFAULT;
+diff -ruaN a/KernelSU/kernel/kpm/kpm.h b/KernelSU/kernel/kpm/kpm.h
+--- a/KernelSU/kernel/kpm/kpm.h	2026-04-12 21:47:21.111197400 +0800
++++ b/KernelSU/kernel/kpm/kpm.h	2026-04-12 21:58:26.275197147 +0800
+@@ -1,8 +1,7 @@
+ #ifndef __SUKISU_KPM_H
+ #define __SUKISU_KPM_H
+ 
+-int sukisu_handle_kpm(unsigned long control_code, unsigned long arg3,
+-                      unsigned long arg4, unsigned long result_code);
++int sukisu_handle_kpm(unsigned long control_code, unsigned long arg1, unsigned long arg2, unsigned long result_code);
+ int sukisu_is_kpm_control_code(unsigned long control_code);
+ int do_kpm(void __user *arg);
+ 
+diff -ruaN a/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c b/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c
+--- a/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c	2026-04-12 22:32:22.287196370 +0800
++++ b/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c	2026-04-12 22:33:10.779196351 +0800
+@@ -142,12 +142,12 @@
+ 		return NULL;
+ }
+ 
+-struct class *get_xiaomi_touch_class()
++struct class *get_xiaomi_touch_class(void)
+ {
+ 	return xiaomi_touch_dev.class;
+ }
+ 
+-struct device *get_xiaomi_touch_dev()
++struct device *get_xiaomi_touch_dev(void)
+ {
+ 	return xiaomi_touch_dev.dev;
+ }
+diff -ruaN a/drivers/kernelsu/Makefile b/drivers/kernelsu/Makefile
+--- a/drivers/kernelsu/Makefile	2026-04-12 21:46:24.803197422 +0800
++++ b/drivers/kernelsu/Makefile	2026-04-12 21:59:54.255197113 +0800
+@@ -144,4 +144,7 @@
+ ccflags-y += -Wno-strict-prototypes -Wno-int-conversion -Wno-gcc-compat -Wno-missing-prototypes
+ ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
+ 
++ccflags-y += -I$(srctree)/security/selinux -I$(srctree)/security/selinux/include
++ccflags-y += -I$(objtree)/security/selinux -include $(srctree)/include/uapi/asm-generic/errno.h
++
+ # Keep a new line here!! Because someone may append config
+diff -ruaN a/drivers/kernelsu/kpm/kpm.c b/drivers/kernelsu/kpm/kpm.c
+--- a/drivers/kernelsu/kpm/kpm.c	2026-04-12 21:46:48.919197413 +0800
++++ b/drivers/kernelsu/kpm/kpm.c	2026-04-12 21:59:17.667197127 +0800
+@@ -35,6 +35,7 @@
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) && defined(CONFIG_MODULES)
+ #include <linux/moduleloader.h>
+ #endif
++#include "../kernel_compat.h"
+ 
+ #define KPM_NAME_LEN 32
+ #define KPM_ARGS_LEN 1024
+@@ -132,19 +133,18 @@
+             goto exit;
+         }
+ 
+-        if (!access_ok(arg1, 255)) {
++        if (!ksu_access_ok(arg1, sizeof(kernel_load_path))) {
+             goto invalid_arg;
+         }
+ 
+-        strncpy_from_user((char *)&kernel_load_path, (const char *)arg1, 255);
++        strncpy_from_user((char *)&kernel_load_path, (const char *)arg1, sizeof(kernel_load_path));
+ 
+         if (arg2 != 0) {
+-            if (!access_ok(arg2, 255)) {
++            if (!ksu_access_ok(arg2, sizeof(kernel_args_buffer))) {
+                 goto invalid_arg;
+             }
+ 
+-            strncpy_from_user((char *)&kernel_args_buffer, (const char *)arg2,
+-                              255);
++            strncpy_from_user((char *)&kernel_args_buffer, (const char *)arg2, sizeof(kernel_args_buffer));
+         }
+ 
+         sukisu_kpm_load_module_path((const char *)&kernel_load_path,
+@@ -158,7 +158,7 @@
+             goto exit;
+         }
+ 
+-        if (!access_ok(arg1, sizeof(kernel_name_buffer))) {
++        if (!ksu_access_ok(arg1, sizeof(kernel_name_buffer))) {
+             goto invalid_arg;
+         }
+ 
+@@ -178,7 +178,7 @@
+             goto exit;
+         }
+ 
+-        if (!access_ok(arg1, sizeof(kernel_name_buffer))) {
++        if (!ksu_access_ok(arg1, sizeof(kernel_name_buffer))) {
+             goto invalid_arg;
+         }
+ 
+@@ -189,7 +189,7 @@
+         sukisu_kpm_info((const char *)&kernel_name_buffer, (char *)&buf,
+                         sizeof(buf), &size);
+ 
+-        if (!access_ok(arg2, size)) {
++        if (!ksu_access_ok(arg2, size)) {
+             goto invalid_arg;
+         }
+ 
+@@ -204,7 +204,7 @@
+             goto exit;
+         }
+ 
+-        if (!access_ok(arg2, len)) {
++        if (!ksu_access_ok(arg2, len)) {
+             goto invalid_arg;
+         }
+ 
+@@ -222,11 +222,11 @@
+         char kpm_name[KPM_NAME_LEN] = { 0 };
+         char kpm_args[KPM_ARGS_LEN] = { 0 };
+ 
+-        if (!access_ok(arg1, sizeof(kpm_name))) {
++        if (!ksu_access_ok(arg1, sizeof(kpm_name))) {
+             goto invalid_arg;
+         }
+ 
+-        if (!access_ok(arg2, sizeof(kpm_args))) {
++        if (!ksu_access_ok(arg2, sizeof(kpm_args))) {
+             goto invalid_arg;
+         }
+ 
+@@ -286,13 +286,13 @@
+         return -EFAULT;
+     }
+ 
+-    if (!access_ok(cmd.control_code, sizeof(int))) {
++    if (!ksu_access_ok(cmd.control_code, sizeof(int))) {
+         pr_err("kpm: invalid control_code pointer %px\n",
+                (void *)cmd.control_code);
+         return -EFAULT;
+     }
+ 
+-    if (!access_ok(cmd.result_code, sizeof(int))) {
++    if (!ksu_access_ok(cmd.result_code, sizeof(int))) {
+         pr_err("kpm: invalid result_code pointer %px\n",
+                (void *)cmd.result_code);
+         return -EFAULT;
+diff -ruaN a/drivers/kernelsu/kpm/kpm.h b/drivers/kernelsu/kpm/kpm.h
+--- a/drivers/kernelsu/kpm/kpm.h	2026-04-12 21:46:48.923197413 +0800
++++ b/drivers/kernelsu/kpm/kpm.h	2026-04-12 21:59:17.671197127 +0800
+@@ -1,8 +1,7 @@
+ #ifndef __SUKISU_KPM_H
+ #define __SUKISU_KPM_H
+ 
+-int sukisu_handle_kpm(unsigned long control_code, unsigned long arg3,
+-                      unsigned long arg4, unsigned long result_code);
++int sukisu_handle_kpm(unsigned long control_code, unsigned long arg1, unsigned long arg2, unsigned long result_code);
+ int sukisu_is_kpm_control_code(unsigned long control_code);
+ int do_kpm(void __user *arg);
+ 
+diff -ruaN a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
+--- a/fs/notify/fdinfo.c	2026-04-12 19:53:05.843619543 +0800
++++ b/fs/notify/fdinfo.c	2026-04-12 21:13:59.687198164 +0800
+@@ -111,6 +111,43 @@
+ 		 * used only internally to the kernel.
+ 		 */
+ 		u32 mask = mark->mask & IN_ALL_EVENTS;
++#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
++		mnt = real_mount(file->f_path.mnt);
++		if (mnt->mnt_id >= DEFAULT_KSU_MNT_ID &&
++			likely(susfs_is_current_proc_umounted()))
++		{
++			struct path path;
++			char *pathname = kmalloc(PAGE_SIZE, GFP_KERNEL);
++			char *dpath;
++			if (!pathname) {
++				goto orig_flow;
++			}
++			dpath = d_path(&file->f_path, pathname, PAGE_SIZE);
++			if (!dpath) {
++				goto out_kfree;
++			}
++			if (kern_path(dpath, 0, &path)) {
++				goto out_kfree;
++			}
++			if (!path.dentry->d_inode) {
++				goto out_path_put;
++			}
++			seq_printf(m, "inotify wd:%x ino:%lx sdev:%x mask:%x ignored_mask:0 ",
++					inode_mark->wd, path.dentry->d_inode->i_ino, path.dentry->d_inode->i_sb->s_dev,
++					inotify_mark_user_mask(mark));
++			show_mark_fhandle(m, path.dentry->d_inode);
++			seq_putc(m, '\n');
++			path_put(&path);
++			kfree(pathname);
++			iput(inode);
++			return;
++out_path_put:
++			path_put(&path);
++out_kfree:
++			kfree(pathname);
++		}
++orig_flow:
++#endif
+ 		seq_printf(m, "inotify wd:%x ino:%lx sdev:%x mask:%x ignored_mask:%x ",
+ 			   inode_mark->wd, inode->i_ino, inode->i_sb->s_dev,
+ 			   mask, mark->ignored_mask);
+diff -ruaN a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+--- a/fs/proc/task_mmu.c	2026-04-12 19:52:53.507619547 +0800
++++ b/fs/proc/task_mmu.c	2026-04-12 21:10:54.415198235 +0800
+@@ -19,6 +19,9 @@
+ #include <linux/shmem_fs.h>
+ #include <linux/uaccess.h>
+ #include <linux/mm_inline.h>
++#if defined(CONFIG_KSU_SUSFS_SUS_KSTAT) || defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)
++#include <linux/susfs_def.h>
++#endif // #if defined(CONFIG_KSU_SUSFS_SUS_KSTAT) || defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)
+ 
+ #include <asm/elf.h>
+ #include <asm/tlb.h>
+@@ -913,7 +916,20 @@
+ 		seq_print_vma_name(m, vma);
+ 		seq_putc(m, '\n');
+ 	}
+-
++#ifdef CONFIG_KSU_SUSFS_SUS_MAP
++	if (vma->vm_file) {
++		struct inode *inode = file_inode(vma->vm_file);
++		if (SUSFS_IS_INODE_SUS_MAP(inode)) {
++			seq_printf(m,
++				"Size:           %8lu kB\n"
++				"KernelPageSize: %8lu kB\n"
++				"MMUPageSize:    %8lu kB\n",
++				(vma->vm_end - vma->vm_start) >> 10,
++				4, 4);
++			goto bypass_orig_flow;
++		}
++	}
++#endif
+ 	seq_printf(m,
+ 		   "Size:           %8lu kB\n"
+ 		   "KernelPageSize: %8lu kB\n"
+@@ -922,11 +938,26 @@
+ 		   vma_kernel_pagesize(vma) >> 10,
+ 		   vma_mmu_pagesize(vma) >> 10);
+ 
+-	__show_smap(m, &mss);
+ 
++#ifdef CONFIG_KSU_SUSFS_SUS_MAP
++bypass_orig_flow:
++#endif
++	__show_smap(m, &mss);
++#ifdef CONFIG_KSU_SUSFS_SUS_MAP
++	if (vma->vm_file) {
++		struct inode *inode = file_inode(vma->vm_file);
++		if (SUSFS_IS_INODE_SUS_MAP(inode)) {
++			seq_puts(m, "VmFlags: mr mw me");
++			seq_putc(m, '\n');
++			goto bypass_orig_flow2;
++		}
++	}
++#endif
+ 	arch_show_smap(m, vma);
+ 	show_smap_vma_flags(m, vma);
+-
++#ifdef CONFIG_KSU_SUSFS_SUS_MAP
++bypass_orig_flow2:
++#endif
+ 	m_cache_vma(m, vma);
+ 
+ 	return 0;
