@@ -11,7 +11,7 @@ diff -ruaN a/KernelSU/kernel/Makefile b/KernelSU/kernel/Makefile
  # Keep a new line here!! Because someone may append config
 diff -ruaN a/KernelSU/kernel/kpm/kpm.c b/KernelSU/kernel/kpm/kpm.c
 --- a/KernelSU/kernel/kpm/kpm.c	2026-04-12 21:47:21.111197400 +0800
-+++ b/KernelSU/kernel/kpm/kpm.c	2026-04-12 21:57:46.223197162 +0800
++++ b/KernelSU/kernel/kpm/kpm.c	2026-04-13 00:33:21.463720654 +0800
 @@ -35,6 +35,7 @@
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) && defined(CONFIG_MODULES)
  #include <linux/moduleloader.h>
@@ -123,6 +123,41 @@ diff -ruaN a/KernelSU/kernel/kpm/kpm.h b/KernelSU/kernel/kpm/kpm.h
  int sukisu_is_kpm_control_code(unsigned long control_code);
  int do_kpm(void __user *arg);
  
+diff -ruaN a/KernelSU/kernel/policy/app_profile.c b/KernelSU/kernel/policy/app_profile.c
+--- a/KernelSU/kernel/policy/app_profile.c	2026-04-14 00:58:01.472807933 +0800
++++ b/KernelSU/kernel/policy/app_profile.c	2026-04-14 01:06:56.364807729 +0800
+@@ -47,10 +47,10 @@
+     put_group_info(group_info);
+ }
+ 
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_OPTIONAL_SECCOMP_FILTER_RELEASE))
+-void seccomp_filter_release(struct task_struct *tsk);
++//#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_OPTIONAL_SECCOMP_FILTER_RELEASE))
++extern void put_seccomp_filter(struct task_struct *tsk);
+ #define KSU_HAS_SECCOMP_FILTER_RELEASE
+-#endif
++//#endif
+ 
+ static void disable_seccomp(void)
+ {
+@@ -99,7 +99,7 @@
+     // https://github.com/torvalds/linux/commit/0d8315dddd2899f519fe1ca3d4d5cdaf44ea421e#diff-45eb79a57536d8eccfc1436932f093eb5c0b60d9361c39edb46581ad313e8987R556-R558
+     fake->sighand = NULL;
+ #endif
+-    seccomp_filter_release(fake);
++    put_seccomp_filter(fake);
+     kfree(fake);
+ #endif
+ }
+@@ -271,7 +271,7 @@
+     fake->sighand = NULL;
+ #endif
+ 
+-    seccomp_filter_release(fake);
++    put_seccomp_filter(fake);
+     kfree(fake);
+ }
+ 
 diff -ruaN a/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c b/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c
 --- a/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c	2026-04-12 22:32:22.287196370 +0800
 +++ b/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c	2026-04-12 22:33:10.779196351 +0800
@@ -154,7 +189,7 @@ diff -ruaN a/drivers/kernelsu/Makefile b/drivers/kernelsu/Makefile
  # Keep a new line here!! Because someone may append config
 diff -ruaN a/drivers/kernelsu/kpm/kpm.c b/drivers/kernelsu/kpm/kpm.c
 --- a/drivers/kernelsu/kpm/kpm.c	2026-04-12 21:46:48.919197413 +0800
-+++ b/drivers/kernelsu/kpm/kpm.c	2026-04-12 21:59:17.667197127 +0800
++++ b/drivers/kernelsu/kpm/kpm.c	2026-04-13 00:33:41.435720647 +0800
 @@ -35,6 +35,7 @@
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) && defined(CONFIG_MODULES)
  #include <linux/moduleloader.h>
@@ -266,9 +301,44 @@ diff -ruaN a/drivers/kernelsu/kpm/kpm.h b/drivers/kernelsu/kpm/kpm.h
  int sukisu_is_kpm_control_code(unsigned long control_code);
  int do_kpm(void __user *arg);
  
+diff -ruaN a/drivers/kernelsu/policy/app_profile.c b/drivers/kernelsu/policy/app_profile.c
+--- a/drivers/kernelsu/policy/app_profile.c	2026-04-13 01:16:35.395719665 +0800
++++ b/drivers/kernelsu/policy/app_profile.c	2026-04-14 01:04:47.444807779 +0800
+@@ -47,10 +47,10 @@
+     put_group_info(group_info);
+ }
+ 
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_OPTIONAL_SECCOMP_FILTER_RELEASE))
+-void seccomp_filter_release(struct task_struct *tsk);
++//#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0) || defined(KSU_OPTIONAL_SECCOMP_FILTER_RELEASE))
++extern void put_seccomp_filter(struct task_struct *tsk);
+ #define KSU_HAS_SECCOMP_FILTER_RELEASE
+-#endif
++//#endif
+ 
+ static void disable_seccomp(void)
+ {
+@@ -99,7 +99,7 @@
+     // https://github.com/torvalds/linux/commit/0d8315dddd2899f519fe1ca3d4d5cdaf44ea421e#diff-45eb79a57536d8eccfc1436932f093eb5c0b60d9361c39edb46581ad313e8987R556-R558
+     fake->sighand = NULL;
+ #endif
+-    seccomp_filter_release(fake);
++    put_seccomp_filter(fake);
+     kfree(fake);
+ #endif
+ }
+@@ -271,7 +271,7 @@
+     fake->sighand = NULL;
+ #endif
+ 
+-    seccomp_filter_release(fake);
++    put_seccomp_filter(fake);
+     kfree(fake);
+ }
+ 
 diff -ruaN a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
 --- a/fs/notify/fdinfo.c	2026-04-12 19:53:05.843619543 +0800
-+++ b/fs/notify/fdinfo.c	2026-04-12 21:13:59.687198164 +0800
++++ b/fs/notify/fdinfo.c	2026-04-13 00:07:41.839721242 +0800
 @@ -111,6 +111,43 @@
  		 * used only internally to the kernel.
  		 */
@@ -377,3 +447,14 @@ diff -ruaN a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
  	m_cache_vma(m, vma);
  
  	return 0;
+diff -ruaN a/kernel/seccomp.c b/kernel/seccomp.c
+--- a/kernel/seccomp.c	2026-04-14 00:56:28.240807969 +0800
++++ b/kernel/seccomp.c	2026-04-14 01:01:26.204807855 +0800
+@@ -524,6 +524,7 @@
+ {
+ 	__put_seccomp_filter(tsk->seccomp.filter);
+ }
++EXPORT_SYMBOL_GPL(put_seccomp_filter);
+ 
+ static void seccomp_init_siginfo(siginfo_t *info, int syscall, int reason)
+ {
