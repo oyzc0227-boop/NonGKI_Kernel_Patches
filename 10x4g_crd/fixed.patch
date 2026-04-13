@@ -336,6 +336,18 @@ diff -ruaN a/drivers/kernelsu/policy/app_profile.c b/drivers/kernelsu/policy/app
      kfree(fake);
  }
  
+diff -ruaN a/drivers/misc/mediatek/base/power/mcdi/mtk_mcdi_governor.c b/drivers/misc/mediatek/base/power/mcdi/mtk_mcdi_governor.c
+--- a/drivers/misc/mediatek/base/power/mcdi/mtk_mcdi_governor.c	2026-04-14 01:44:28.273774727 +0800
++++ b/drivers/misc/mediatek/base/power/mcdi/mtk_mcdi_governor.c	2026-04-14 01:46:52.409774672 +0800
+@@ -194,7 +194,7 @@
+ 	mcdi_prof_set_idle_state(cpu, state);
+ }
+ 
+-int get_cluster_off_token(cpu)
++int get_cluster_off_token(int cpu)
+ {
+ 	unsigned long flags;
+ 	int cluster;
 diff -ruaN a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
 --- a/fs/notify/fdinfo.c	2026-04-12 19:53:05.843619543 +0800
 +++ b/fs/notify/fdinfo.c	2026-04-13 00:07:41.839721242 +0800
