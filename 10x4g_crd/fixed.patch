@@ -1,6 +1,6 @@
 diff -ruaN a/KernelSU/kernel/Makefile b/KernelSU/kernel/Makefile
---- a/KernelSU/kernel/Makefile	2026-04-12 21:47:08.259197405 +0800
-+++ b/KernelSU/kernel/Makefile	2026-04-12 21:49:26.887197352 +0800
+--- a/KernelSU/kernel/Makefile	2026-04-15 00:04:28.474460291 +0800
++++ b/KernelSU/kernel/Makefile	2026-04-15 00:04:28.746460291 +0800
 @@ -144,4 +144,7 @@
  ccflags-y += -Wno-strict-prototypes -Wno-int-conversion -Wno-gcc-compat -Wno-missing-prototypes
  ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
@@ -10,8 +10,8 @@ diff -ruaN a/KernelSU/kernel/Makefile b/KernelSU/kernel/Makefile
 +
  # Keep a new line here!! Because someone may append config
 diff -ruaN a/KernelSU/kernel/kpm/kpm.c b/KernelSU/kernel/kpm/kpm.c
---- a/KernelSU/kernel/kpm/kpm.c	2026-04-12 21:47:21.111197400 +0800
-+++ b/KernelSU/kernel/kpm/kpm.c	2026-04-13 00:33:21.463720654 +0800
+--- a/KernelSU/kernel/kpm/kpm.c	2026-04-15 00:04:28.462460291 +0800
++++ b/KernelSU/kernel/kpm/kpm.c	2026-04-15 00:04:28.730460291 +0800
 @@ -35,6 +35,7 @@
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) && defined(CONFIG_MODULES)
  #include <linux/moduleloader.h>
@@ -111,8 +111,8 @@ diff -ruaN a/KernelSU/kernel/kpm/kpm.c b/KernelSU/kernel/kpm/kpm.c
                 (void *)cmd.result_code);
          return -EFAULT;
 diff -ruaN a/KernelSU/kernel/kpm/kpm.h b/KernelSU/kernel/kpm/kpm.h
---- a/KernelSU/kernel/kpm/kpm.h	2026-04-12 21:47:21.111197400 +0800
-+++ b/KernelSU/kernel/kpm/kpm.h	2026-04-12 21:58:26.275197147 +0800
+--- a/KernelSU/kernel/kpm/kpm.h	2026-04-15 00:04:28.462460291 +0800
++++ b/KernelSU/kernel/kpm/kpm.h	2026-04-15 00:04:28.730460291 +0800
 @@ -1,8 +1,7 @@
  #ifndef __SUKISU_KPM_H
  #define __SUKISU_KPM_H
@@ -124,8 +124,8 @@ diff -ruaN a/KernelSU/kernel/kpm/kpm.h b/KernelSU/kernel/kpm/kpm.h
  int do_kpm(void __user *arg);
  
 diff -ruaN a/KernelSU/kernel/policy/app_profile.c b/KernelSU/kernel/policy/app_profile.c
---- a/KernelSU/kernel/policy/app_profile.c	2026-04-14 00:58:01.472807933 +0800
-+++ b/KernelSU/kernel/policy/app_profile.c	2026-04-14 01:06:56.364807729 +0800
+--- a/KernelSU/kernel/policy/app_profile.c	2026-04-15 00:04:28.470460291 +0800
++++ b/KernelSU/kernel/policy/app_profile.c	2026-04-15 00:04:28.738460291 +0800
 @@ -47,10 +47,10 @@
      put_group_info(group_info);
  }
@@ -158,27 +158,9 @@ diff -ruaN a/KernelSU/kernel/policy/app_profile.c b/KernelSU/kernel/policy/app_p
      kfree(fake);
  }
  
-diff -ruaN a/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c b/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c
---- a/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c	2026-04-12 22:32:22.287196370 +0800
-+++ b/drivers/input/touchscreen/mediatek/xiaomi/xiaomi_touch.c	2026-04-12 22:33:10.779196351 +0800
-@@ -142,12 +142,12 @@
- 		return NULL;
- }
- 
--struct class *get_xiaomi_touch_class()
-+struct class *get_xiaomi_touch_class(void)
- {
- 	return xiaomi_touch_dev.class;
- }
- 
--struct device *get_xiaomi_touch_dev()
-+struct device *get_xiaomi_touch_dev(void)
- {
- 	return xiaomi_touch_dev.dev;
- }
 diff -ruaN a/drivers/kernelsu/Makefile b/drivers/kernelsu/Makefile
---- a/drivers/kernelsu/Makefile	2026-04-12 21:46:24.803197422 +0800
-+++ b/drivers/kernelsu/Makefile	2026-04-12 21:59:54.255197113 +0800
+--- a/drivers/kernelsu/Makefile	2026-04-15 00:04:28.578460291 +0800
++++ b/drivers/kernelsu/Makefile	2026-04-15 00:04:28.818460291 +0800
 @@ -144,4 +144,7 @@
  ccflags-y += -Wno-strict-prototypes -Wno-int-conversion -Wno-gcc-compat -Wno-missing-prototypes
  ccflags-y += -Wno-declaration-after-statement -Wno-unused-function
@@ -188,8 +170,8 @@ diff -ruaN a/drivers/kernelsu/Makefile b/drivers/kernelsu/Makefile
 +
  # Keep a new line here!! Because someone may append config
 diff -ruaN a/drivers/kernelsu/kpm/kpm.c b/drivers/kernelsu/kpm/kpm.c
---- a/drivers/kernelsu/kpm/kpm.c	2026-04-12 21:46:48.919197413 +0800
-+++ b/drivers/kernelsu/kpm/kpm.c	2026-04-13 00:33:41.435720647 +0800
+--- a/drivers/kernelsu/kpm/kpm.c	2026-04-15 00:04:28.558460291 +0800
++++ b/drivers/kernelsu/kpm/kpm.c	2026-04-15 00:04:28.806460291 +0800
 @@ -35,6 +35,7 @@
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0) && defined(CONFIG_MODULES)
  #include <linux/moduleloader.h>
@@ -289,8 +271,8 @@ diff -ruaN a/drivers/kernelsu/kpm/kpm.c b/drivers/kernelsu/kpm/kpm.c
                 (void *)cmd.result_code);
          return -EFAULT;
 diff -ruaN a/drivers/kernelsu/kpm/kpm.h b/drivers/kernelsu/kpm/kpm.h
---- a/drivers/kernelsu/kpm/kpm.h	2026-04-12 21:46:48.923197413 +0800
-+++ b/drivers/kernelsu/kpm/kpm.h	2026-04-12 21:59:17.671197127 +0800
+--- a/drivers/kernelsu/kpm/kpm.h	2026-04-15 00:04:28.554460291 +0800
++++ b/drivers/kernelsu/kpm/kpm.h	2026-04-15 00:04:28.810460291 +0800
 @@ -1,8 +1,7 @@
  #ifndef __SUKISU_KPM_H
  #define __SUKISU_KPM_H
@@ -302,8 +284,8 @@ diff -ruaN a/drivers/kernelsu/kpm/kpm.h b/drivers/kernelsu/kpm/kpm.h
  int do_kpm(void __user *arg);
  
 diff -ruaN a/drivers/kernelsu/policy/app_profile.c b/drivers/kernelsu/policy/app_profile.c
---- a/drivers/kernelsu/policy/app_profile.c	2026-04-13 01:16:35.395719665 +0800
-+++ b/drivers/kernelsu/policy/app_profile.c	2026-04-14 01:04:47.444807779 +0800
+--- a/drivers/kernelsu/policy/app_profile.c	2026-04-15 00:04:28.578460291 +0800
++++ b/drivers/kernelsu/policy/app_profile.c	2026-04-15 00:04:28.818460291 +0800
 @@ -47,10 +47,10 @@
      put_group_info(group_info);
  }
@@ -336,21 +318,9 @@ diff -ruaN a/drivers/kernelsu/policy/app_profile.c b/drivers/kernelsu/policy/app
      kfree(fake);
  }
  
-diff -ruaN a/drivers/misc/mediatek/base/power/mcdi/mtk_mcdi_governor.c b/drivers/misc/mediatek/base/power/mcdi/mtk_mcdi_governor.c
---- a/drivers/misc/mediatek/base/power/mcdi/mtk_mcdi_governor.c	2026-04-14 01:44:28.273774727 +0800
-+++ b/drivers/misc/mediatek/base/power/mcdi/mtk_mcdi_governor.c	2026-04-14 01:46:52.409774672 +0800
-@@ -194,7 +194,7 @@
- 	mcdi_prof_set_idle_state(cpu, state);
- }
- 
--int get_cluster_off_token(cpu)
-+int get_cluster_off_token(int cpu)
- {
- 	unsigned long flags;
- 	int cluster;
 diff -ruaN a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
---- a/fs/notify/fdinfo.c	2026-04-12 19:53:05.843619543 +0800
-+++ b/fs/notify/fdinfo.c	2026-04-13 00:07:41.839721242 +0800
+--- a/fs/notify/fdinfo.c	2026-04-15 00:04:28.654460291 +0800
++++ b/fs/notify/fdinfo.c	2026-04-15 00:04:28.886460291 +0800
 @@ -111,6 +111,43 @@
  		 * used only internally to the kernel.
  		 */
@@ -396,8 +366,8 @@ diff -ruaN a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
  			   inode_mark->wd, inode->i_ino, inode->i_sb->s_dev,
  			   mask, mark->ignored_mask);
 diff -ruaN a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
---- a/fs/proc/task_mmu.c	2026-04-12 19:52:53.507619547 +0800
-+++ b/fs/proc/task_mmu.c	2026-04-12 21:10:54.415198235 +0800
+--- a/fs/proc/task_mmu.c	2026-04-15 00:04:28.666460291 +0800
++++ b/fs/proc/task_mmu.c	2026-04-15 00:04:28.898460291 +0800
 @@ -19,6 +19,9 @@
  #include <linux/shmem_fs.h>
  #include <linux/uaccess.h>
@@ -460,8 +430,8 @@ diff -ruaN a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
  
  	return 0;
 diff -ruaN a/kernel/seccomp.c b/kernel/seccomp.c
---- a/kernel/seccomp.c	2026-04-14 00:56:28.240807969 +0800
-+++ b/kernel/seccomp.c	2026-04-14 01:01:26.204807855 +0800
+--- a/kernel/seccomp.c	2026-04-15 00:04:28.682460291 +0800
++++ b/kernel/seccomp.c	2026-04-15 00:04:28.910460291 +0800
 @@ -524,6 +524,7 @@
  {
  	__put_seccomp_filter(tsk->seccomp.filter);
