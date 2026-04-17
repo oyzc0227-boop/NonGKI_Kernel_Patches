@@ -1,6 +1,6 @@
 diff -ruaN a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
 --- a/fs/notify/fdinfo.c	2026-04-18 03:17:42.399112530 +0800
-+++ b/fs/notify/fdinfo.c	2026-04-18 03:30:04.547112247 +0800
++++ b/fs/notify/fdinfo.c	2026-04-18 03:41:06.155111995 +0800
 @@ -104,6 +104,43 @@
  	inode_mark = container_of(mark, struct inotify_inode_mark, fsn_mark);
  	inode = igrab(mark->connector->inode);
@@ -28,7 +28,7 @@ diff -ruaN a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
 +			}
 +			seq_printf(m, "inotify wd:%x ino:%lx sdev:%x mask:%x ignored_mask:0 ",
 +					inode_mark->wd, path.dentry->d_inode->i_ino, path.dentry->d_inode->i_sb->s_dev,
-+					inotify_mark_user_mask(mark));
++					mark->mask & IN_ALL_EVENTS);
 +			show_mark_fhandle(m, path.dentry->d_inode);
 +			seq_putc(m, '\n');
 +			path_put(&path);
