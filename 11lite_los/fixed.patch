@@ -1,0 +1,20 @@
+diff -ruaN a/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile b/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile
+--- a/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile	2026-05-22 00:54:46.310027540 +0800
++++ b/drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile	2026-05-22 00:56:33.910027499 +0800
+@@ -3,5 +3,4 @@
+ #
+ 
+ 
+-obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTool.o ftsFlash.o ftsGesture.o
+-
++obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTime.o ftsTool.o ftsFlash.o ftsGesture.o
+diff -ruaN a/drivers/input/touchscreen/fts_spi/fts_lib/Makefile b/drivers/input/touchscreen/fts_spi/fts_lib/Makefile
+--- a/drivers/input/touchscreen/fts_spi/fts_lib/Makefile	2026-05-22 00:54:46.350027540 +0800
++++ b/drivers/input/touchscreen/fts_spi/fts_lib/Makefile	2026-05-22 00:55:39.822027519 +0800
+@@ -3,5 +3,4 @@
+ #
+ 
+ 
+-obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTool.o ftsFlash.o ftsGesture.o
+-
++obj-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += ftsCompensation.o ftsCore.o ftsError.o ftsFrame.o ftsIO.o ftsTest.o ftsTime.o ftsTool.o ftsFlash.o ftsGesture.o
